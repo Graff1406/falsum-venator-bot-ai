@@ -1,9 +1,10 @@
-import { genAI, ModelType, GenerateOptions } from '../providers/genAI.provider';
+import { genAI, GenerateOptions } from '../providers/genAI.provider';
 import { Result } from '../models';
+import { GeminiModels } from '../utils/enums.util';
 
 export const generateText = async <T>({
   prompt = '',
-  modelType = ModelType.Gemini_2_0_flash_lite_preview_02_05,
+  modelType = GeminiModels.Gemini_2_0_flash_lite_preview_02_05,
   generationConfig,
 }: GenerateOptions): Promise<Result<T>> => {
   const model = genAI.getGenerativeModel({

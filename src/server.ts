@@ -1,6 +1,6 @@
 import createApp from './app';
 import { config } from './config/app.config';
-import { pingServer } from './utils/ping-server.utils';
+import { pingServer } from './utils/ping-server.util';
 
 const startServer = () => {
   const app = createApp();
