@@ -7,5 +7,5 @@ export const config = {
   PORT: process.env.PORT || 3000,
   NODE_ENV: process.env.NODE_ENV || 'development',
   PUBLIC_DIR: path.join(__dirname, '..', '..', 'public'),
-  HOST_NAME: 'https://nodejs-server-fp-detectop-ai.onrender.com',
+  HOST_NAME: '',
 };

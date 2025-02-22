@@ -4,7 +4,6 @@ import { securityMiddleware } from './middlewares/security.middleware';
 import { loggerMiddleware } from './middlewares/logger.middleware';
 import { corsMiddleware } from './middlewares/cors.middleware';
 import { notFoundHandler, errorHandler } from './middlewares/error.middleware';
-import { router as apiRouter } from './routes/api.routes';
 
 const createApp = () => {
   const app = express();
@@ -26,7 +25,6 @@ const createApp = () => {
   app.use(express.static(config.PUBLIC_DIR));
 
   // Routes
-  app.use('/api', apiRouter);
 
   // Error handling
   app.use(notFoundHandler);
