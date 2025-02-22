@@ -1,6 +1,6 @@
-import bot from '../providers/bot.provider';
-import { generateText } from '../services/generateText.services';
-import { Commands } from '../utils/enums.util';
+import bot from '@/providers/bot.provider';
+import { generateText } from '@/services/generateText.services';
+import { Commands } from '@/utils/enums.util';
 
 const commands: string[] = [`/${Commands.start}`];
 

@@ -1,5 +1,5 @@
-import bot from '../providers/bot.provider';
-import { Commands } from '../utils/enums.util';
+import bot from '@/providers/bot.provider';
+import { Commands } from '@/utils/enums.util';
 
 // bot.api.setMyCommands([]);
 
