@@ -5,6 +5,8 @@ import { loggerMiddleware } from './middlewares/logger.middleware';
 import { corsMiddleware } from './middlewares/cors.middleware';
 import { notFoundHandler, errorHandler } from './middlewares/error.middleware';
 
+import './controllers/bot-message.controller';
+
 const createApp = () => {
   const app = express();
 

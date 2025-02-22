@@ -1,8 +1,4 @@
-import {
-  genAI,
-  ModelType,
-  GenerateOptions,
-} from '../providers/genAI.providers';
+import { genAI, ModelType, GenerateOptions } from '../providers/genAI.provider';
 import { Result } from '../models';
 
 export const generateText = async <T>({
