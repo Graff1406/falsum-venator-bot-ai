@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "start": "node dist/server.js",
-    "dev": "ts-node -r tsconfig-paths/register src/server.ts",
+    "dev": "nodemon -r tsconfig-paths/register --ext ts,tsx --exec ts-node src/server.ts",
     "postinstall": "npm run build",
     "build": "tsc",
     "lint": "eslint . --ext .ts",
