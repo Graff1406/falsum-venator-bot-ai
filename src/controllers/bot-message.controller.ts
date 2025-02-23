@@ -3,20 +3,19 @@ import { generateText } from '@/services/generateText.services';
 import { containsTelegramLink, reducePrompt } from '@/utils';
 import { CHANNEL_TRACKING_START_PROMPT } from '@/utils/ai-prompt.util';
 import { db } from '@/providers/firebase.provider';
+import { TelegramChannel } from '@/models/firestore-collection.model';
 
 bot.on('message', async (ctx) => {
   try {
-    // const chatId = ctx.chatId;
+    const chatId = ctx.chatId;
     const message = ctx.message.text || '';
     const lang = ctx.from?.language_code || 'en';
 
-    addDataToFirestore();
-    return;
+    const telegramChannelLink = containsTelegramLink(message);
 
-    const textHasTelLink = containsTelegramLink(message);
-
-    if (textHasTelLink) {
-      handlePassedTelegramLinkToMessage(ctx, lang);
+    if (typeof telegramChannelLink === 'string') {
+      handlePassedTelegramLinkToMessage(chatId, lang);
+      saveTelegramChannel(chatId, telegramChannelLink);
       return;
     }
 
@@ -27,8 +26,7 @@ bot.on('message', async (ctx) => {
   }
 });
 
-async function handlePassedTelegramLinkToMessage(ctx: any, lang: string) {
-  const chatId = ctx.chatId;
+async function handlePassedTelegramLinkToMessage(chatId: number, lang: string) {
   const prompt = reducePrompt({
     lang,
     message: CHANNEL_TRACKING_START_PROMPT,
@@ -53,11 +51,17 @@ async function handlePassedTelegramLinkToMessage(ctx: any, lang: string) {
 
 //Example of using Firestore:
 
-async function addDataToFirestore() {
+async function saveTelegramChannel(
+  chatId: number,
+  link: string
+): Promise<void> {
+  const channel: TelegramChannel = {
+    created_at: Date.now(),
+    link,
+    followers: [{ updated_at: Date.now(), chat_id: chatId }],
+  };
   try {
-    const docRef = await db
-      .collection('yourCollection')
-      .add({ name: 'Example Name', value: 1 });
+    const docRef = await db.collection('telegramChannels').add(channel);
     console.log('Document written with ID: ', docRef.id);
   } catch (error) {
     console.error('Error adding document: ', error);
