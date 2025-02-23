@@ -1,7 +1,7 @@
 {
-  "name": "fp-detectorai",
+  "name": "Falsum Venator Bot AI",
   "version": "1.0.0",
-  "description": "Browser Extension Backend for Real-Time News Authenticity Analysis",
+  "description": "Falsum Venator Bot AI is an artificial intelligence bot designed to analyze and identify false information, as well as automate communication and processing of user requests.",
   "main": "dist/server.js",
   "scripts": {
     "start": "node dist/server.js",
