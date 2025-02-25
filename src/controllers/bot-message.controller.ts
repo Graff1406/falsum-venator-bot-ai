@@ -1,7 +1,7 @@
 import bot from '@/providers/bot.provider';
 import { generateText } from '@/services/generateText.services';
 import {
-  getTelegramChannelUserName,
+  getTelegramChannelUsername,
   reducePrompt,
   parseTelegramChannelPosts,
 } from '@/utils';
@@ -16,24 +16,14 @@ bot.on('message', async (ctx) => {
     const message = ctx.message.text || '';
     const lang = ctx.from?.language_code || 'en';
 
-    const telegramChannelUserName = getTelegramChannelUserName(message);
-    // console.log('🚀 ~ bot.on ~ telegramChannelUserName:', telegramChannelUserName);
+    const telegramChannelUsername = getTelegramChannelUsername(message);
 
-    // bot.api.sendMessage(
-    //   '@falsum_venator',
-    //   '<a href="https://t.me/falsum_venator/40">adjara_properties</a>',
-    //   { parse_mode: 'HTML' }
-    // );
-
-    // return;
-
-    if (typeof telegramChannelUserName === 'string') {
+    if (typeof telegramChannelUsername === 'string') {
       sendMessageToChannelAndForward(chatId, lang);
-      savePassedTelegramChannel(chatId, telegramChannelUserName);
-      const data = await parseTelegramChannelPosts(
-        TelegramUrls.dirPostList + telegramChannelUserName
+      savePassedTelegramChannel(chatId, telegramChannelUsername);
+      const extractedChannelPosts = await parseTelegramChannelPosts(
+        TelegramUrls.dirPostList + telegramChannelUsername
       );
-      console.log('🚀 ~ bot.on ~ data:', data);
       return;
     }
 
