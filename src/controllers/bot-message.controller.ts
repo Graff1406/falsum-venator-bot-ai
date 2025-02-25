@@ -1,8 +1,13 @@
 import bot from '@/providers/bot.provider';
 import { generateText } from '@/services/generateText.services';
-import { containsTelegramLink, reducePrompt } from '@/utils';
+import {
+  getTelegramChannelUserName,
+  reducePrompt,
+  parseTelegramChannelPosts,
+} from '@/utils';
 import { CHANNEL_TRACKING_START_PROMPT } from '@/utils/ai-prompt.util';
-import { db } from '@/providers/firebase.provider';
+import { TelegramUrls } from '@/utils/enums.util';
+import { db, fb } from '@/providers/firebase.provider';
 import { TelegramChannel } from '@/models/firestore-collection.model';
 
 bot.on('message', async (ctx) => {
@@ -11,11 +16,24 @@ bot.on('message', async (ctx) => {
     const message = ctx.message.text || '';
     const lang = ctx.from?.language_code || 'en';
 
-    const telegramChannelLink = containsTelegramLink(message);
+    const telegramChannelUserName = getTelegramChannelUserName(message);
+    // console.log('🚀 ~ bot.on ~ telegramChannelUserName:', telegramChannelUserName);
 
-    if (typeof telegramChannelLink === 'string') {
-      handlePassedTelegramLinkToMessage(chatId, lang);
-      saveTelegramChannel(chatId, telegramChannelLink);
+    // bot.api.sendMessage(
+    //   '@falsum_venator',
+    //   '<a href="https://t.me/falsum_venator/40">adjara_properties</a>',
+    //   { parse_mode: 'HTML' }
+    // );
+
+    // return;
+
+    if (typeof telegramChannelUserName === 'string') {
+      sendMessageToChannelAndForward(chatId, lang);
+      savePassedTelegramChannel(chatId, telegramChannelUserName);
+      const data = await parseTelegramChannelPosts(
+        TelegramUrls.dirPostList + telegramChannelUserName
+      );
+      console.log('🚀 ~ bot.on ~ data:', data);
       return;
     }
 
@@ -26,7 +44,7 @@ bot.on('message', async (ctx) => {
   }
 });
 
-async function handlePassedTelegramLinkToMessage(chatId: number, lang: string) {
+async function sendMessageToChannelAndForward(chatId: number, lang: string) {
   const prompt = reducePrompt({
     lang,
     message: CHANNEL_TRACKING_START_PROMPT,
@@ -45,25 +63,47 @@ async function handlePassedTelegramLinkToMessage(chatId: number, lang: string) {
       process.env.TELEGRAM_CHANNEL_ID,
       savedMessageId
     );
-    console.log('🚀 ~ handlePassedTelegramLinkToMessage ~ message:', message);
   }
 }
 
-//Example of using Firestore:
-
-async function saveTelegramChannel(
+async function savePassedTelegramChannel(
   chatId: number,
-  link: string
+  username: string
 ): Promise<void> {
-  const channel: TelegramChannel = {
-    created_at: Date.now(),
-    link,
-    followers: [{ updated_at: Date.now(), chat_id: chatId }],
-  };
+  const channelsRef = db.collection('telegramChannels');
+
   try {
-    const docRef = await db.collection('telegramChannels').add(channel);
-    console.log('Document written with ID: ', docRef.id);
+    // Search for a document with the specified username
+    const querySnapshot = await channelsRef
+      .where('username', '==', username)
+      .get();
+
+    if (!querySnapshot.empty) {
+      // If a document with the specified username is found
+      const doc = querySnapshot.docs[0];
+      const channelData = doc.data();
+
+      // Check if the chatId already exists in the followers array
+      const existingFollower = channelData.followers.find(
+        (follower: { chat_id: number }) => follower.chat_id === chatId
+      );
+
+      if (!existingFollower) {
+        // If chatId doesn't exist, add it to the followers
+        await doc.ref.update({
+          followers: [...channelData.followers, { chat_id: chatId }],
+        });
+      }
+    } else {
+      // If no document with the specified username is found, create a new one
+      const channel: TelegramChannel = {
+        created_at: fb.firestore.Timestamp.now(),
+        username,
+        followers: [{ chat_id: chatId }],
+      };
+      await channelsRef.add(channel);
+    }
   } catch (error) {
-    console.error('Error adding document: ', error);
+    console.error('Error updating or adding document: ', error);
   }
 }

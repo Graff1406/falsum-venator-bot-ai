@@ -1,5 +1,4 @@
 import admin from 'firebase-admin';
-// import data from '@/config/falsum-venator-ai-app-firebase-adminsdk.json';
 
 const serviceAccount = {
   type: 'service_account',
@@ -24,3 +23,4 @@ admin.initializeApp({
 });
 
 export const db = admin.firestore();
+export const fb = admin;

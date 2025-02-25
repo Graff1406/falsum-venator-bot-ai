@@ -4,7 +4,7 @@ import { GeminiModels } from '@/utils';
 
 export const generateText = async <T>({
   prompt = '',
-  modelType = GeminiModels.Gemini_2_0_flash_lite_preview_02_05,
+  modelType = GeminiModels.Gemini_2_0_flash,
   generationConfig,
 }: GenerateOptions): Promise<Result<T>> => {
   const model = genAI.getGenerativeModel({

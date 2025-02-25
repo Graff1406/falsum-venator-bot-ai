@@ -1,6 +1,10 @@
+import admin from 'firebase-admin';
+
 export interface TelegramChannel {
   id?: string;
-  created_at: number;
-  link: string;
-  followers: { updated_at: number; chat_id: number }[];
+  last_message_time?: string;
+  last_read_time?: string;
+  username: string;
+  created_at: admin.firestore.Timestamp;
+  followers: { chat_id: number }[];
 }

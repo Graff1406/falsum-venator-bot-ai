@@ -6,3 +6,8 @@ export enum GeminiModels {
 export enum Commands {
   start = 'start',
 }
+
+export enum TelegramUrls {
+  baseURL = 'https://t.me/',
+  dirPostList = 'https://t.me/s/',
+}
