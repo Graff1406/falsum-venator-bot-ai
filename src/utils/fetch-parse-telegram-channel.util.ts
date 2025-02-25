@@ -1,15 +1,15 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import { ChannelPostData } from '@/models';
+import { TelegramChannelPostData } from '@/models';
 
 export const parseTelegramChannelPosts = async (
   url: string
-): Promise<ChannelPostData[] | null> => {
+): Promise<TelegramChannelPostData[] | null> => {
   try {
     const { data } = await axios.get(url);
     const $ = cheerio.load(data);
 
-    const messages: ChannelPostData[] = [];
+    const messages: TelegramChannelPostData[] = [];
 
     $('.tgme_widget_message').each((_, element) => {
       if ($(element).hasClass('service_message')) return;

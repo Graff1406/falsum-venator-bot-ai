@@ -5,7 +5,10 @@ import {
   reducePrompt,
   parseTelegramChannelPosts,
 } from '@/utils';
-import { CHANNEL_TRACKING_START_PROMPT } from '@/utils/ai-prompt.util';
+import {
+  CHANNEL_TRACKING_START_PROMPT,
+  CHANNEL_POST_ANALYSIS_PROMPT,
+} from '@/utils/ai-prompt.util';
 import { TelegramUrls } from '@/utils/enums.util';
 import { db, fb } from '@/providers/firebase.provider';
 import { TelegramChannel } from '@/models/firestore-collection.model';
@@ -24,6 +27,49 @@ bot.on('message', async (ctx) => {
       const extractedChannelPosts = await parseTelegramChannelPosts(
         TelegramUrls.dirPostList + telegramChannelUsername
       );
+      const textOnlyPosts = extractedChannelPosts?.map(
+        (post: { text: string; post_id: string }) => ({
+          text: post.text,
+          post_id: post.post_id,
+        })
+      );
+      console.log('🚀 ~ bot.on ~ textOnlyPosts:', textOnlyPosts);
+      const prompt = reducePrompt({
+        lang,
+        message: CHANNEL_POST_ANALYSIS_PROMPT,
+        payload: JSON.stringify(textOnlyPosts?.filter((_, i) => i === 1)),
+      });
+      const { data } = await generateText<string>({
+        prompt,
+      });
+      console.log('🚀 ~ bot.on ~ data:', data);
+      const cleanedJson = data
+        .toString()
+        .replace(/```json|```/g, '')
+        .trim();
+
+      const posts: { text: string; post_id: string }[] =
+        JSON.parse(cleanedJson);
+      console.log('🚀 ~ bot.on ~ posts:', posts);
+
+      if (process.env.TELEGRAM_CHANNEL_ID) {
+        for (let post of posts) {
+          const postURL = `${TelegramUrls.baseURL + telegramChannelUsername}/${post.post_id}`;
+          const message = await bot.api.sendMessage(
+            process.env.TELEGRAM_CHANNEL_ID,
+            `${post.text}\n\n${postURL}`,
+            {
+              parse_mode: 'Markdown',
+            }
+          );
+          await bot.api.forwardMessage(
+            chatId,
+            process.env.TELEGRAM_CHANNEL_ID,
+            message.message_id
+          );
+        }
+      }
+
       return;
     }
 
