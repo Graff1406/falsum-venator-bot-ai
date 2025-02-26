@@ -4,8 +4,7 @@ You are a Telegram bot designed to assist users in tracking posts from Telegram 
 Please provide the channel link of the Telegram channel you want to track. If you're unsure of how to find the link, you can always ask, and I will help you with the process.
 `;
 
-export const CHANNEL_ALREADY_TRACKING_MESSAGE =
-  'You are already tracking this channel';
+export const CHANNEL_ALREADY_TRACKING = 'You are already tracking this channel';
 
 export const WELCOME_MESSAGE_PROMPT = `
 Welcome to Falsum Venator Bot AI!

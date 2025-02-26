@@ -9,7 +9,7 @@ import {
 import {
   CHANNEL_TRACKING_START_PROMPT,
   CHANNEL_POST_ANALYSIS_PROMPT,
-  CHANNEL_ALREADY_TRACKING_MESSAGE,
+  CHANNEL_ALREADY_TRACKING,
   BOT_ROLE_DESCRIPTION,
 } from '@/utils/ai-prompt.util';
 import { TelegramUrls } from '@/utils/enums.util';
@@ -33,7 +33,7 @@ bot.on('message', async (ctx) => {
       if (hasSavedUsername) {
         const data = await generateTextByReducePrompt<string>({
           lang,
-          message: CHANNEL_ALREADY_TRACKING_MESSAGE,
+          message: CHANNEL_ALREADY_TRACKING,
         });
         ctx.reply(data);
       } else {
@@ -47,6 +47,7 @@ bot.on('message', async (ctx) => {
 
         sendPostsToTelegramChannel(posts, telegramChannelUsername, chatId);
       }
+      return;
     }
     const data = await generateTextByReducePrompt<string>({
       lang,
@@ -161,7 +162,6 @@ async function sendMessageToChannelAndForward(chatId: number, lang: string) {
     lang,
     message: CHANNEL_TRACKING_START_PROMPT,
   });
-  // ctx.reply(data);
 
   if (process.env.TELEGRAM_CHANNEL_ID) {
     const message = await bot.api.sendMessage(
@@ -224,26 +224,26 @@ async function checkChannelAndChatId(
   username: string
 ): Promise<boolean> {
   try {
-    // Получаем ссылку на коллекцию telegramChannels
+    // Get a reference to the telegramChannels collection
     const telegramChannelsRef = db.collection('telegramChannels');
 
-    // Запрашиваем документ, где поле username равно переданному значению
+    // Query the document where the username field matches the passed value
     const querySnapshot = await telegramChannelsRef
       .where('username', '==', username)
       .get();
 
     if (querySnapshot.empty) {
-      // Если не найдено ни одного документа с таким username
+      // If no document with the specified username is found
       console.log('No such channel found');
       return false;
     }
 
-    // Перебираем все найденные документы (может быть несколько)
+    // Iterate over all found documents (there may be several)
     for (const doc of querySnapshot.docs) {
       const data = doc.data();
       const followers = data.followers || [];
 
-      // Проверяем, содержится ли объект с нужным chat_id в массиве followers
+      // Check if the object with the required chat_id is in the followers array
       const isChatIdFound = followers.some(
         (follower: { chat_id: number }) => follower.chat_id === chatId
       );
@@ -254,7 +254,7 @@ async function checkChannelAndChatId(
       }
     }
 
-    // Если не найдено соответствующего chat_id
+    // If the corresponding chat_id is not found
     console.log('No such chat_id found in followers');
     return false;
   } catch (error) {
