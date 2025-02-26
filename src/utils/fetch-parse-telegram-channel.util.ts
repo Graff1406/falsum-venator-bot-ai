@@ -3,13 +3,14 @@ import * as cheerio from 'cheerio';
 import { TelegramChannelPostData } from '@/models';
 
 export const parseTelegramChannelPosts = async (
-  url: string
+  url: string,
+  countPosts?: number
 ): Promise<TelegramChannelPostData[] | null> => {
   try {
     const { data } = await axios.get(url);
     const $ = cheerio.load(data);
 
-    const messages: TelegramChannelPostData[] = [];
+    const posts: TelegramChannelPostData[] = [];
 
     $('.tgme_widget_message').each((_, element) => {
       if ($(element).hasClass('service_message')) return;
@@ -25,11 +26,15 @@ export const parseTelegramChannelPosts = async (
         '';
 
       if (text && datetime && post_id) {
-        messages.push({ post_id, text, datetime });
+        posts.push({ post_id, text, datetime });
       }
     });
 
-    return messages.length ? messages : null;
+    return posts.length
+      ? countPosts
+        ? posts.slice(-countPosts)
+        : posts
+      : null;
   } catch (error) {
     console.error('Error fetching data:', error);
     return null;

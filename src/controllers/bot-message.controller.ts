@@ -9,6 +9,8 @@ import {
 import {
   CHANNEL_TRACKING_START_PROMPT,
   CHANNEL_POST_ANALYSIS_PROMPT,
+  CHANNEL_ALREADY_TRACKING_MESSAGE,
+  BOT_ROLE_DESCRIPTION,
 } from '@/utils/ai-prompt.util';
 import { TelegramUrls } from '@/utils/enums.util';
 import { db, fb } from '@/providers/firebase.provider';
@@ -23,25 +25,54 @@ bot.on('message', async (ctx) => {
     const telegramChannelUsername = getTelegramChannelUsername(message);
 
     if (typeof telegramChannelUsername === 'string') {
-      sendMessageToChannelAndForward(chatId, lang);
-      saveUsernameTelegramChannelToFirestore(chatId, telegramChannelUsername);
-
-      const posts = await extractTelegramChannelPosts(
-        telegramChannelUsername,
-        lang
+      const hasSavedUsername = await checkChannelAndChatId(
+        chatId,
+        telegramChannelUsername
       );
 
-      sendPostsToTelegramChannel(posts, telegramChannelUsername, chatId);
+      if (hasSavedUsername) {
+        const data = await generateTextByReducePrompt<string>({
+          lang,
+          message: CHANNEL_ALREADY_TRACKING_MESSAGE,
+        });
+        ctx.reply(data);
+      } else {
+        sendMessageToChannelAndForward(chatId, lang);
+        saveUsernameTelegramChannelToFirestore(chatId, telegramChannelUsername);
 
-      return;
+        const posts = await extractTelegramChannelPosts(
+          telegramChannelUsername,
+          lang
+        );
+
+        sendPostsToTelegramChannel(posts, telegramChannelUsername, chatId);
+      }
     }
-
-    const result = await generateText<string>({ prompt: message });
-    ctx.reply(result.data);
+    const data = await generateTextByReducePrompt<string>({
+      lang,
+      message,
+      payload: BOT_ROLE_DESCRIPTION,
+    });
+    ctx.reply(data);
   } catch (error) {
     console.log(error);
   }
 });
+
+async function generateTextByReducePrompt<T>({
+  lang,
+  message,
+  payload,
+}: {
+  lang: string;
+  message: string;
+  payload?: string;
+}): Promise<T> {
+  const { data } = await generateText<T>({
+    prompt: reducePrompt({ lang, message, payload }),
+  });
+  return data;
+}
 
 async function sendPostsToTelegramChannel(
   posts: AIResPost[],
@@ -88,7 +119,8 @@ async function extractTelegramChannelPosts(
 ): Promise<AIResPost[]> {
   // Fetch the posts from the Telegram channel
   const extractedChannelPosts = await parseTelegramChannelPosts(
-    TelegramUrls.dirPostList + telegramChannelUsername
+    TelegramUrls.dirPostList + telegramChannelUsername,
+    1
   );
 
   // Return an empty array if no posts were fetched
@@ -102,15 +134,12 @@ async function extractTelegramChannelPosts(
     })
   );
 
-  // Create the prompt for the analysis (filter to second post if needed)
-  const prompt = reducePrompt({
+  // Generate the analysis data
+  const data = await generateTextByReducePrompt<string>({
     lang,
     message: CHANNEL_POST_ANALYSIS_PROMPT,
-    payload: JSON.stringify(textOnlyPosts.slice(1, 2)), // Only sending second post
+    payload: JSON.stringify(textOnlyPosts),
   });
-
-  // Generate the analysis data
-  const { data } = await generateText<string>({ prompt });
 
   // Clean the JSON data (remove code block markers and trim whitespace)
   const cleanedJson = data.replace(/```json|```/g, '').trim();
@@ -128,11 +157,10 @@ async function extractTelegramChannelPosts(
 }
 
 async function sendMessageToChannelAndForward(chatId: number, lang: string) {
-  const prompt = reducePrompt({
+  const data = await generateTextByReducePrompt<string>({
     lang,
     message: CHANNEL_TRACKING_START_PROMPT,
   });
-  const { data } = await generateText<string>({ prompt });
   // ctx.reply(data);
 
   if (process.env.TELEGRAM_CHANNEL_ID) {
@@ -188,5 +216,49 @@ async function saveUsernameTelegramChannelToFirestore(
     }
   } catch (error) {
     console.error('Error updating or adding document: ', error);
+  }
+}
+
+async function checkChannelAndChatId(
+  chatId: number,
+  username: string
+): Promise<boolean> {
+  try {
+    // Получаем ссылку на коллекцию telegramChannels
+    const telegramChannelsRef = db.collection('telegramChannels');
+
+    // Запрашиваем документ, где поле username равно переданному значению
+    const querySnapshot = await telegramChannelsRef
+      .where('username', '==', username)
+      .get();
+
+    if (querySnapshot.empty) {
+      // Если не найдено ни одного документа с таким username
+      console.log('No such channel found');
+      return false;
+    }
+
+    // Перебираем все найденные документы (может быть несколько)
+    for (const doc of querySnapshot.docs) {
+      const data = doc.data();
+      const followers = data.followers || [];
+
+      // Проверяем, содержится ли объект с нужным chat_id в массиве followers
+      const isChatIdFound = followers.some(
+        (follower: { chat_id: number }) => follower.chat_id === chatId
+      );
+
+      if (isChatIdFound) {
+        console.log('Found chat_id in followers');
+        return true;
+      }
+    }
+
+    // Если не найдено соответствующего chat_id
+    console.log('No such chat_id found in followers');
+    return false;
+  } catch (error) {
+    console.error('Error checking channel and chat_id:', error);
+    return false;
   }
 }

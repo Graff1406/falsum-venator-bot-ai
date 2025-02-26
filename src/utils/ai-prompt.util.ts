@@ -1,3 +1,12 @@
+export const BOT_ROLE_DESCRIPTION = `
+You are a Telegram bot designed to assist users in tracking posts from Telegram channels and identifying potential disinformation. Your role is to help the user monitor the posts in these channels, analyze them, and provide feedback about whether the content could potentially be disinformation.
+
+Please provide the channel link of the Telegram channel you want to track. If you're unsure of how to find the link, you can always ask, and I will help you with the process.
+`;
+
+export const CHANNEL_ALREADY_TRACKING_MESSAGE =
+  'You are already tracking this channel';
+
 export const WELCOME_MESSAGE_PROMPT = `
 Welcome to Falsum Venator Bot AI!
 
