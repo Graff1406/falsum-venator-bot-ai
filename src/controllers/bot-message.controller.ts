@@ -1,5 +1,5 @@
 import bot from '@/providers/bot.provider';
-import { generateText } from '@/services/generateText.services';
+import { generateText } from '@/services';
 import {
   getTelegramChannelUsername,
   reducePrompt,
@@ -12,16 +12,60 @@ import {
   CHANNEL_ALREADY_TRACKING,
   BOT_ROLE_DESCRIPTION,
 } from '@/utils/ai-prompt.util';
-import { TelegramUrls } from '@/utils/enums.util';
+import { TelegramUrls, DBCollections } from '@/utils/enums.util';
 import { db, fb } from '@/providers/firebase.provider';
-import { TelegramChannel, AIResPost } from '@/models';
+import { TelegramChannel, AIResPost, TelegramChannelPost } from '@/models';
+import { updateTelegramChannelField, getCollectionDocuments } from '@/services';
 
 bot.on('message', async (ctx) => {
-  try {
-    const chatId = ctx.chatId;
-    const message = ctx.message.text || '';
-    const lang = ctx.from?.language_code || 'en';
+  const chatId = ctx.chatId;
+  const message = ctx.message.text || '';
+  const lang = ctx.from?.language_code || 'en';
 
+  scheduleTelegramPostFetch(undefined, async () => {
+    const telegramChannels = await getCollectionDocuments<TelegramChannel>(
+      DBCollections.TELEGRAM_CHANNELS
+    ); // Fetch all telegram channels  from Firestore  every 60 seconds  and store them in the telegramChannels variable
+
+    // console.log('telegramChannels', telegramChannels);
+
+    if (!telegramChannels) return; // If no telegram channels are found, return immediately and           do nothing  else, iterate over each channel
+    for (const channel of telegramChannels) {
+      const extractedChannelPosts: TelegramChannelPost[] =
+        await parseTelegramChannelPosts({
+          url: TelegramUrls.dirPostList + channel.username,
+          fromDatetime: channel.last_message_time,
+        }); // Extract posts from the channel
+
+      console.log('extractedChannelPosts', extractedChannelPosts.length);
+
+      if (extractedChannelPosts.length === 0) continue; // If no posts are found, continue to the next channel
+      await updateLastMessageTime(extractedChannelPosts, channel.username);
+
+      console.log('updateLastMessageTime', true);
+
+      const analyzedPosts = await analyzeByAITelegramChannelPosts(
+        extractedChannelPosts,
+        lang
+      );
+
+      console.log('analyzedPosts', analyzedPosts);
+
+      if (analyzedPosts.length === 0) continue; // If no posts are analyzed, continue to the next channel
+
+      for (const follower of channel.followers) {
+        await sendPostsToTelegramChannel(
+          analyzedPosts,
+          channel.username,
+          follower.chat_id
+        ); // Send the posts to the channel on the Telegram channel for each follower
+
+        console.log('sendPostsToTelegramChannel', sendPostsToTelegramChannel);
+      }
+    }
+  });
+
+  try {
     const telegramChannelUsername = getTelegramChannelUsername(message);
 
     if (typeof telegramChannelUsername === 'string') {
@@ -37,11 +81,22 @@ bot.on('message', async (ctx) => {
         });
         ctx.reply(data);
       } else {
-        sendMessageToChannelAndForward(chatId, lang);
+        const data = await generateTextByReducePrompt<string>({
+          lang,
+          message: CHANNEL_TRACKING_START_PROMPT,
+        });
+        ctx.reply(data);
+
         saveUsernameTelegramChannelToFirestore(chatId, telegramChannelUsername);
 
-        const posts = await extractTelegramChannelPosts(
-          telegramChannelUsername,
+        const extractedChannelPosts: TelegramChannelPost[] =
+          await parseTelegramChannelPosts({
+            url: TelegramUrls.dirPostList + telegramChannelUsername,
+            countPosts: 1,
+          });
+
+        const posts = await analyzeByAITelegramChannelPosts(
+          extractedChannelPosts,
           lang
         );
 
@@ -59,6 +114,34 @@ bot.on('message', async (ctx) => {
     console.log(error);
   }
 });
+
+async function updateLastMessageTime(
+  posts: TelegramChannelPost[],
+  channelUsername: string
+): Promise<void> {
+  const now = new Date().getTime();
+  console.log(`updateLastMessageTime: ${posts} ${channelUsername}`);
+  const post = posts.reduce((closest, post) => {
+    const postTime = new Date(post.datetime).getTime();
+    return Math.abs(postTime - now) <
+      Math.abs(new Date(closest.datetime).getTime() - now)
+      ? post
+      : closest;
+  }, posts[0]);
+  updateTelegramChannelField(
+    channelUsername,
+    'last_message_time',
+    post.datetime
+  );
+}
+
+async function scheduleTelegramPostFetch(
+  interval = 6000,
+  callback: () => void
+): Promise<NodeJS.Timeout> {
+  const intervalId = setInterval(callback, interval);
+  return intervalId;
+}
 
 async function generateTextByReducePrompt<T>({
   lang,
@@ -90,7 +173,7 @@ async function sendPostsToTelegramChannel(
       // Attempt to send the message with Markdown formatting
       message = await bot.api.sendMessage(
         process.env.TELEGRAM_CHANNEL_ID,
-        `${post.text}\n\n${postURL}`,
+        `🔗 [${post.title}](${postURL})\n${post.text}\n\n`,
         { parse_mode: 'Markdown' }
       );
     } catch (error) {
@@ -114,21 +197,17 @@ async function sendPostsToTelegramChannel(
 }
 
 // Extracts posts from a Telegram channel
-async function extractTelegramChannelPosts(
-  telegramChannelUsername: string,
+async function analyzeByAITelegramChannelPosts(
+  posts: TelegramChannelPost[],
   lang: string
 ): Promise<AIResPost[]> {
   // Fetch the posts from the Telegram channel
-  const extractedChannelPosts = await parseTelegramChannelPosts(
-    TelegramUrls.dirPostList + telegramChannelUsername,
-    1
-  );
 
   // Return an empty array if no posts were fetched
-  if (!extractedChannelPosts || extractedChannelPosts.length === 0) return [];
+  if (!posts || posts.length === 0) return [];
 
   // Map over the posts to extract only the relevant fields
-  const textOnlyPosts: AIResPost[] = extractedChannelPosts.map(
+  const textOnlyPosts: { text: string; post_id: string }[] = posts.map(
     ({ text, post_id }) => ({
       text,
       post_id,
@@ -157,25 +236,25 @@ async function extractTelegramChannelPosts(
   }
 }
 
-async function sendMessageToChannelAndForward(chatId: number, lang: string) {
-  const data = await generateTextByReducePrompt<string>({
-    lang,
-    message: CHANNEL_TRACKING_START_PROMPT,
-  });
+// async function sendMessageToChannelAndForward(chatId: number, lang: string) {
+//   const data = await generateTextByReducePrompt<string>({
+//     lang,
+//     message: CHANNEL_TRACKING_START_PROMPT,
+//   });
 
-  if (process.env.TELEGRAM_CHANNEL_ID) {
-    const message = await bot.api.sendMessage(
-      process.env.TELEGRAM_CHANNEL_ID,
-      data
-    );
-    const savedMessageId = message.message_id;
-    await bot.api.forwardMessage(
-      chatId,
-      process.env.TELEGRAM_CHANNEL_ID,
-      savedMessageId
-    );
-  }
-}
+//   if (process.env.TELEGRAM_CHANNEL_ID) {
+//     const message = await bot.api.sendMessage(
+//       process.env.TELEGRAM_CHANNEL_ID,
+//       data
+//     );
+//     const savedMessageId = message.message_id;
+//     await bot.api.forwardMessage(
+//       chatId,
+//       process.env.TELEGRAM_CHANNEL_ID,
+//       savedMessageId
+//     );
+//   }
+// }
 
 async function saveUsernameTelegramChannelToFirestore(
   chatId: number,

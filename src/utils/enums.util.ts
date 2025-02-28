@@ -11,3 +11,7 @@ export enum TelegramUrls {
   baseURL = 'https://t.me/',
   dirPostList = 'https://t.me/s/',
 }
+
+export enum DBCollections {
+  TELEGRAM_CHANNELS = 'telegramChannels',
+}

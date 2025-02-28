@@ -1,23 +1,30 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import { TelegramChannelPostData } from '@/models';
+import { TelegramChannelPost } from '@/models';
 
-export const parseTelegramChannelPosts = async (
-  url: string,
-  countPosts?: number
-): Promise<TelegramChannelPostData[] | null> => {
+interface Props {
+  url: string;
+  countPosts?: number;
+  fromDatetime?: string;
+}
+
+export const parseTelegramChannelPosts = async ({
+  url,
+  countPosts = 0,
+  fromDatetime,
+}: Props): Promise<TelegramChannelPost[]> => {
+  console.log('Fetching data from:', url, countPosts, fromDatetime);
   try {
     const { data } = await axios.get(url);
     const $ = cheerio.load(data);
 
-    const posts: TelegramChannelPostData[] = [];
+    const posts: TelegramChannelPost[] = [];
 
     $('.tgme_widget_message').each((_, element) => {
       if ($(element).hasClass('service_message')) return;
 
       const post_id_raw = $(element).attr('data-post') || '';
       const post_id_match = post_id_raw.match(/\/(\d+)$/);
-
       const post_id = post_id_match ? post_id_match[1] : '';
 
       const text = $(element).find('.tgme_widget_message_text').text().trim();
@@ -30,13 +37,30 @@ export const parseTelegramChannelPosts = async (
       }
     });
 
-    return posts.length
-      ? countPosts
-        ? posts.slice(-countPosts)
-        : posts
-      : null;
+    if (!posts.length) return [];
+
+    let filteredPosts = posts;
+
+    // Filter posts if `fromDatetime` is provided
+    if (fromDatetime) {
+      filteredPosts = posts.filter((post) => {
+        const postDatetime = new Date(post.datetime).getTime();
+        const incomeDatetime = new Date(fromDatetime).getTime();
+        // console.log(
+        //   'Comparing:',
+        //   postDatetime,
+        //   incomeDatetime,
+        //   postDatetime > incomeDatetime
+        // );
+
+        return postDatetime > incomeDatetime;
+      });
+    }
+
+    // Limit the number of posts if `countPosts` is provided
+    return filteredPosts.slice(-countPosts);
   } catch (error) {
     console.error('Error fetching data:', error);
-    return null;
+    return [];
   }
 };
