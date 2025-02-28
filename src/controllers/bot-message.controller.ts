@@ -22,7 +22,7 @@ bot.on('message', async (ctx) => {
   const message = ctx.message.text || '';
   const lang = ctx.from?.language_code || 'en';
 
-  scheduleTelegramPostFetch(undefined, async () => {
+  scheduleTelegramPostFetch(600000, async () => {
     const telegramChannels = await getCollectionDocuments<TelegramChannel>(
       DBCollections.TELEGRAM_CHANNELS
     ); // Fetch all telegram channels  from Firestore  every 60 seconds  and store them in the telegramChannels variable
@@ -37,19 +37,13 @@ bot.on('message', async (ctx) => {
           fromDatetime: channel.last_message_time,
         }); // Extract posts from the channel
 
-      console.log('extractedChannelPosts', extractedChannelPosts.length);
-
       if (extractedChannelPosts.length === 0) continue; // If no posts are found, continue to the next channel
       await updateLastMessageTime(extractedChannelPosts, channel.username);
-
-      console.log('updateLastMessageTime', true);
 
       const analyzedPosts = await analyzeByAITelegramChannelPosts(
         extractedChannelPosts,
         lang
       );
-
-      console.log('analyzedPosts', analyzedPosts);
 
       if (analyzedPosts.length === 0) continue; // If no posts are analyzed, continue to the next channel
 
@@ -59,8 +53,6 @@ bot.on('message', async (ctx) => {
           channel.username,
           follower.chat_id
         ); // Send the posts to the channel on the Telegram channel for each follower
-
-        console.log('sendPostsToTelegramChannel', sendPostsToTelegramChannel);
       }
     }
   });
@@ -92,7 +84,7 @@ bot.on('message', async (ctx) => {
         const extractedChannelPosts: TelegramChannelPost[] =
           await parseTelegramChannelPosts({
             url: TelegramUrls.dirPostList + telegramChannelUsername,
-            countPosts: 1,
+            countPosts: 3,
           });
 
         const posts = await analyzeByAITelegramChannelPosts(
@@ -120,7 +112,6 @@ async function updateLastMessageTime(
   channelUsername: string
 ): Promise<void> {
   const now = new Date().getTime();
-  console.log(`updateLastMessageTime: ${posts} ${channelUsername}`);
   const post = posts.reduce((closest, post) => {
     const postTime = new Date(post.datetime).getTime();
     return Math.abs(postTime - now) <
@@ -136,7 +127,7 @@ async function updateLastMessageTime(
 }
 
 async function scheduleTelegramPostFetch(
-  interval = 6000,
+  interval = 60000,
   callback: () => void
 ): Promise<NodeJS.Timeout> {
   const intervalId = setInterval(callback, interval);
@@ -214,17 +205,16 @@ async function analyzeByAITelegramChannelPosts(
     })
   );
 
-  // Generate the analysis data
-  const data = await generateTextByReducePrompt<string>({
-    lang,
-    message: CHANNEL_POST_ANALYSIS_PROMPT,
-    payload: JSON.stringify(textOnlyPosts),
-  });
-
-  // Clean the JSON data (remove code block markers and trim whitespace)
-  const cleanedJson = data.replace(/```json|```/g, '').trim();
-
   try {
+    // Generate the analysis data
+    const data = await generateTextByReducePrompt<string>({
+      lang,
+      message: CHANNEL_POST_ANALYSIS_PROMPT,
+      payload: JSON.stringify(textOnlyPosts),
+    });
+
+    // Clean the JSON data (remove code block markers and trim whitespace)
+    const cleanedJson = data.replace(/```json|```/g, '').trim();
     // Parse the cleaned JSON into a Post array
     const parsedPosts: AIResPost[] = JSON.parse(cleanedJson);
 

@@ -62,7 +62,7 @@ Ensure that the entire analysis, including labels and values, is in the same lan
 
 \`\`\`
 
-Please return the response in the following format:
+Please return the response in the following valid json format:
 
 [
   {

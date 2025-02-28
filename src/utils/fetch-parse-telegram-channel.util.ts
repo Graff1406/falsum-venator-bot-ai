@@ -13,7 +13,6 @@ export const parseTelegramChannelPosts = async ({
   countPosts = 0,
   fromDatetime,
 }: Props): Promise<TelegramChannelPost[]> => {
-  console.log('Fetching data from:', url, countPosts, fromDatetime);
   try {
     const { data } = await axios.get(url);
     const $ = cheerio.load(data);
@@ -39,26 +38,23 @@ export const parseTelegramChannelPosts = async ({
 
     if (!posts.length) return [];
 
-    let filteredPosts = posts;
+    let filteredPosts = posts
+      .slice(-countPosts)
+      .filter((post) => post.text.length > 200);
 
     // Filter posts if `fromDatetime` is provided
     if (fromDatetime) {
       filteredPosts = posts.filter((post) => {
+        if (!post.datetime || !post.text) return false;
+
         const postDatetime = new Date(post.datetime).getTime();
         const incomeDatetime = new Date(fromDatetime).getTime();
-        // console.log(
-        //   'Comparing:',
-        //   postDatetime,
-        //   incomeDatetime,
-        //   postDatetime > incomeDatetime
-        // );
-
         return postDatetime > incomeDatetime;
       });
     }
 
     // Limit the number of posts if `countPosts` is provided
-    return filteredPosts.slice(-countPosts);
+    return filteredPosts;
   } catch (error) {
     console.error('Error fetching data:', error);
     return [];
