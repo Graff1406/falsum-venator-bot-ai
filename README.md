@@ -54,8 +54,8 @@ This project provides the initial setup for a TypeScript-based Telegram bot that
 **Create a .env.local file to store environment variables. Add your Google API key and Telegram Bot token:**
 
 ```
-- GOOGLE_API_KEY=your-google-api-key
-- GOOGLE_API_KEY=your-telegram-bot-token
+- GOOGLE_AI_API_KEY=your-google-api-key
+- GOOGLE_AI_API_KEY=your-telegram-bot-token
 ```
 
 ## Project Structure

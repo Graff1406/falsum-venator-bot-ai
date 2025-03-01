@@ -6,7 +6,9 @@ import {
 
 import { GeminiModels } from '@/utils';
 
-export const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || '');
+export const genAI = new GoogleGenerativeAI(
+  process.env.GOOGLE_AI_API_KEY || ''
+);
 
 export interface GenerateOptions {
   prompt: string;

@@ -54,6 +54,7 @@ bot.on('message', async (ctx) => {
           follower.chat_id
         ); // Send the posts to the channel on the Telegram channel for each follower
       }
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   });
 
@@ -107,6 +108,15 @@ bot.on('message', async (ctx) => {
   }
 });
 
+function getTelegramChannelId(): string | null {
+  const id =
+    process.env.NODE_ENV === 'production'
+      ? process.env.TELEGRAM_CHANNEL_ID
+      : process.env.DEV_TELEGRAM_CHANNEL_ID;
+
+  return id || null;
+}
+
 async function updateLastMessageTime(
   posts: TelegramChannelPost[],
   channelUsername: string
@@ -154,7 +164,8 @@ async function sendPostsToTelegramChannel(
   telegramChannelUsername: string,
   chatId: number
 ): Promise<void> {
-  if (!process.env.TELEGRAM_CHANNEL_ID) return;
+  const telegramChannelId = getTelegramChannelId();
+  if (!telegramChannelId) return;
   // Loop over each post to send and forward it
   for (const post of posts) {
     let message;
@@ -163,14 +174,14 @@ async function sendPostsToTelegramChannel(
     try {
       // Attempt to send the message with Markdown formatting
       message = await bot.api.sendMessage(
-        process.env.TELEGRAM_CHANNEL_ID,
+        telegramChannelId,
         `🔗 [${post.title}](${postURL})\n${post.text}\n\n`,
         { parse_mode: 'Markdown' }
       );
     } catch (error) {
       // If sending fails, remove stars and send as plain text
       message = await bot.api.sendMessage(
-        process.env.TELEGRAM_CHANNEL_ID,
+        telegramChannelId,
         removeStars(`${post.text}\n\n${postURL}`)
       );
       console.error('Error sending message:', error);
@@ -180,7 +191,7 @@ async function sendPostsToTelegramChannel(
     if (message) {
       await bot.api.forwardMessage(
         chatId,
-        process.env.TELEGRAM_CHANNEL_ID,
+        telegramChannelId,
         message.message_id
       );
     }
@@ -225,26 +236,6 @@ async function analyzeByAITelegramChannelPosts(
     return [];
   }
 }
-
-// async function sendMessageToChannelAndForward(chatId: number, lang: string) {
-//   const data = await generateTextByReducePrompt<string>({
-//     lang,
-//     message: CHANNEL_TRACKING_START_PROMPT,
-//   });
-
-//   if (process.env.TELEGRAM_CHANNEL_ID) {
-//     const message = await bot.api.sendMessage(
-//       process.env.TELEGRAM_CHANNEL_ID,
-//       data
-//     );
-//     const savedMessageId = message.message_id;
-//     await bot.api.forwardMessage(
-//       chatId,
-//       process.env.TELEGRAM_CHANNEL_ID,
-//       savedMessageId
-//     );
-//   }
-// }
 
 async function saveUsernameTelegramChannelToFirestore(
   chatId: number,

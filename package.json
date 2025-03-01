@@ -4,10 +4,10 @@
   "description": "Falsum Venator Bot AI is an artificial intelligence bot designed to analyze and identify false information, as well as automate communication and processing of user requests.",
   "main": "dist/server.js",
   "scripts": {
-    "start": "node dist/server.js",
-    "dev": "nodemon -r tsconfig-paths/register --ext ts,tsx --exec ts-node src/server.ts",
+    "start": "node dist/server.js NODE_ENV=production",
+    "dev": "nodemon -r tsconfig-paths/register --ext ts,tsx --exec ts-node src/server.ts NODE_ENV=development",
     "postinstall": "npm run build",
-    "build": "tsc",
+    "build": "tsc NODE_ENV=production",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "test": "jest",

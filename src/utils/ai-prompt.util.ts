@@ -53,7 +53,6 @@ Ensure that the entire analysis, including labels and values, is in the same lan
 
 ### Expected Markdown output for each message:
 \`\`\`markdown
-*Type*: [Type of disinformation]
 *Narrative*: [Core message narrative]
 *Implicit message*: [Implicit message]
 *Hidden motive*: [Hidden motive, if any]
