@@ -6,5 +6,5 @@ export interface TelegramChannel {
   last_read_time?: string;
   username: string;
   created_at: admin.firestore.Timestamp;
-  followers: { chat_id: number }[];
+  followers: { chat_id: number; lang: string }[];
 }

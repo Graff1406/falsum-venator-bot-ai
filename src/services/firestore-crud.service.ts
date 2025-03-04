@@ -46,3 +46,75 @@ export const getCollectionDocuments = async <T>(
     return null;
   }
 };
+
+export const addDocument = async <
+  T extends FirebaseFirestore.WithFieldValue<FirebaseFirestore.DocumentData>,
+>(
+  collectionName: string,
+  data: T,
+  docName?: string
+): Promise<string> => {
+  try {
+    const collectionRef = db.collection(collectionName);
+    const docRef = docName ? collectionRef.doc(docName) : collectionRef.doc();
+
+    await docRef.set(data);
+
+    console.log(`Document added to "${collectionName}" with ID: ${docRef.id}`);
+    return docRef.id;
+  } catch (error) {
+    console.error('Error adding document:', error);
+    throw error;
+  }
+};
+
+export const getDocument = async <T extends FirebaseFirestore.DocumentData>(
+  collectionName: string,
+  docId: string
+): Promise<T | null> => {
+  try {
+    const docRef = db.collection(collectionName).doc(docId);
+    const docSnapshot = await docRef.get();
+
+    if (!docSnapshot.exists) {
+      console.warn(
+        `⚠️ Document "${docId}" not found in collection "${collectionName}"`
+      );
+      return null;
+    }
+
+    console.log(`📄 Document "${docId}" fetched from "${collectionName}"`);
+    return docSnapshot.data() as T;
+  } catch (error) {
+    console.error('❌ Error fetching document:', error);
+    throw error;
+  }
+};
+
+export const updateDocument = async <
+  T extends Partial<FirebaseFirestore.DocumentData>,
+>(
+  collectionName: string,
+  docId: string,
+  data: T
+): Promise<void> => {
+  try {
+    const docRef = db.collection(collectionName).doc(docId);
+    const docSnapshot = await docRef.get();
+
+    if (!docSnapshot.exists) {
+      console.warn(
+        `⚠️ Document "${docId}" not found in collection "${collectionName}"`
+      );
+      return;
+    }
+
+    await docRef.update(data);
+    console.log(
+      `✅ Document "${docId}" updated successfully in "${collectionName}"`
+    );
+  } catch (error) {
+    console.error('❌ Error updating document:', error);
+    throw error;
+  }
+};
