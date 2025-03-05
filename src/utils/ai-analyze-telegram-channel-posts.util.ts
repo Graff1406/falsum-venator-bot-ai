@@ -28,12 +28,18 @@ export async function analyzeByAITelegramChannelPosts(
       payload: JSON.stringify(textOnlyPosts),
     });
 
-    // Clean the JSON data (remove code block markers and trim whitespace)
-    const cleanedJson = data.replace(/```json|```/g, '').trim();
-    // Parse the cleaned JSON into a Post array
-    const parsedPosts: AIResPost[] = JSON.parse(cleanedJson);
+    try {
+      // Clean the JSON data (remove code block markers and trim whitespace)
+      const cleanedJson = data.replace(/```json|```/g, '').trim();
 
-    return parsedPosts; // Return the parsed posts
+      // Parse the cleaned JSON into a Post array
+      const parsedPosts: AIResPost[] = JSON.parse(cleanedJson);
+      return parsedPosts; // Return the parsed posts
+    } catch (err) {
+      // Handle JSON parsing errors gracefully
+      console.error('🚨 ~ Error parsing JSON:', data);
+      return [];
+    }
   } catch (error) {
     // Handle JSON parsing errors gracefully
     console.error('🚨 ~ Error parsing JSON:', error);

@@ -13,7 +13,7 @@ import {
 } from '@/utils/ai-prompt.util';
 import { TelegramUrls } from '@/utils/enums.util';
 import { db, fb } from '@/providers/firebase.provider';
-import { TelegramChannel, TelegramChannelPost } from '@/models';
+import { TelegramChannel, TelegramChannelPost, AIResPost } from '@/models';
 
 bot.on('message', async (ctx) => {
   const chatId = ctx.chatId;
@@ -60,7 +60,12 @@ bot.on('message', async (ctx) => {
           lang
         );
 
-        sendPostsToTelegramChannel(posts, telegramChannelUsername, chatId);
+        sendPostsToTelegramChannel(
+          extractedChannelPosts,
+          posts,
+          telegramChannelUsername,
+          chatId
+        );
       }
       return;
     }

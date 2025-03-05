@@ -1,5 +1,5 @@
 import bot from '@/providers/bot.provider';
-import { AIResPost } from '@/models';
+import { AIResPost, TelegramChannelPost } from '@/models';
 import { TelegramUrls } from '@/utils/enums.util';
 import { removeStars } from '@/utils/fix-markdown.util';
 
@@ -13,29 +13,38 @@ function getTelegramChannelId(): string | null {
 }
 
 export async function sendPostsToTelegramChannel(
+  extractedChannelPosts: TelegramChannelPost[],
   posts: AIResPost[],
   telegramChannelUsername: string,
   chatId: number
 ): Promise<void> {
   const telegramChannelId = getTelegramChannelId();
   if (!telegramChannelId) return;
+
+  const reducePosts = posts.map((post) => {
+    return {
+      ...post,
+      author: extractedChannelPosts.find((p) => p.post_id === post.post_id)
+        ?.author,
+    };
+  }) as AIResPost[];
   // Loop over each post to send and forward it
-  for (const post of posts) {
+  for (const post of reducePosts) {
     let message;
     const postURL = `${TelegramUrls.baseURL + telegramChannelUsername}/${post.post_id}`;
+    const author = post?.author?.replace(/[^a-zA-Z0-9]/g, ' ') || '';
+    const prompt = `*${author}*: [${post.title}](${postURL})\n\n${post.text}\n\n`;
 
     try {
       // Attempt to send the message with Markdown formatting
-      message = await bot.api.sendMessage(
-        telegramChannelId,
-        `🔗 [${post.title}](${postURL})\n${post.text}\n\n`,
-        { parse_mode: 'Markdown' }
-      );
+      message = await bot.api.sendMessage(telegramChannelId, prompt, {
+        parse_mode: 'Markdown',
+      });
     } catch (error) {
       // If sending fails, remove stars and send as plain text
       message = await bot.api.sendMessage(
         telegramChannelId,
-        removeStars(`${post.text}\n\n${postURL}`)
+        removeStars(prompt)
       );
       console.error('Error sending message:', error);
     }

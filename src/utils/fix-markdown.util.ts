@@ -1,3 +1,3 @@
 export const removeStars = (text: string): string => {
-  return text.replace(/\*/g, '');
+  return text.replace(/[\*\n]/g, '');
 };

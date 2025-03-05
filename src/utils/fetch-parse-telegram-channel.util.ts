@@ -17,6 +17,10 @@ export const parseTelegramChannelPosts = async ({
     const { data } = await axios.get(url);
     const $ = cheerio.load(data);
 
+    // Get the channel name (author)
+    const author =
+      $('.tgme_channel_info_header_title > span').text().trim() || 'Unknown';
+
     const posts: TelegramChannelPost[] = [];
 
     $('.tgme_widget_message').each((_, element) => {
@@ -32,7 +36,7 @@ export const parseTelegramChannelPosts = async ({
         '';
 
       if (text && datetime && post_id) {
-        posts.push({ post_id, text, datetime });
+        posts.push({ post_id, text, datetime, author });
       }
     });
 
@@ -42,7 +46,7 @@ export const parseTelegramChannelPosts = async ({
       .slice(-countPosts)
       .filter((post) => post.text.length > 200);
 
-    // Filter posts if `fromDatetime` is provided
+    // Filter by date if `fromDatetime` is provided
     if (fromDatetime) {
       filteredPosts = posts.filter((post) => {
         if (!post.datetime || !post.text) return false;
@@ -53,7 +57,6 @@ export const parseTelegramChannelPosts = async ({
       });
     }
 
-    // Limit the number of posts if `countPosts` is provided
     return filteredPosts;
   } catch (error) {
     console.error('Error fetching data:', error);

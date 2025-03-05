@@ -57,6 +57,7 @@ bot.start({
           if (analyzedPosts.length === 0) continue; // If no posts are analyzed, continue to the next channel
           for (const follower of channel.followers) {
             await sendPostsToTelegramChannel(
+              extractedChannelPosts,
               analyzedPosts,
               channel.username,
               follower.chat_id
