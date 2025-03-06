@@ -1,6 +1,6 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import { TelegramChannelPost } from '@/models';
+import { TelegramChannelPost } from '../models';
 
 interface Props {
   url: string;

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import path from 'path';
-import { config } from '@/config/app.config';
+import { config } from '../config/app.config';
 
 export const notFoundHandler = (req: Request, res: Response) => {
   res.status(404).sendFile(path.join(config.PUBLIC_DIR, '404.html'));

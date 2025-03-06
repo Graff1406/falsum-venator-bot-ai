@@ -1,6 +1,6 @@
-import { genAI, GenerateOptions } from '@/providers/genAI.provider';
-import { Result } from '@/models';
-import { GeminiModels } from '@/utils';
+import { genAI, GenerateOptions } from '../providers/genAI.provider';
+import { Result } from '../models';
+import { GeminiModels } from '../utils';
 
 export const generateText = async <T>({
   prompt = '',

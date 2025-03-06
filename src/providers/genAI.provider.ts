@@ -4,7 +4,7 @@ import {
   ResponseSchema,
 } from '@google/generative-ai';
 
-import { GeminiModels } from '@/utils';
+import { GeminiModels } from '../utils';
 
 export const genAI = new GoogleGenerativeAI(
   process.env.GOOGLE_AI_API_KEY || ''

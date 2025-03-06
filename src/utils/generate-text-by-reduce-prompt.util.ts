@@ -1,5 +1,5 @@
-import { reducePrompt } from '@/utils';
-import { generateText } from '@/services';
+import { reducePrompt } from '../utils';
+import { generateText } from '../services';
 export async function generateTextByReducePrompt<T>({
   lang,
   message,

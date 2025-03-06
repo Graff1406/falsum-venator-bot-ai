@@ -1,5 +1,5 @@
-import { db } from '@/providers/firebase.provider';
-import { DBCollections } from '@/utils/enums.util';
+import { db } from '../providers/firebase.provider';
+import { DBCollections } from '../utils/enums.util';
 
 export const updateTelegramChannelField = async (
   username: string,

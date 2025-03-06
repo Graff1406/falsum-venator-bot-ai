@@ -1,19 +1,19 @@
-import bot from '@/providers/bot.provider';
+import bot from '../providers/bot.provider';
 import {
   getTelegramChannelUsername,
   parseTelegramChannelPosts,
   generateTextByReducePrompt,
   analyzeByAITelegramChannelPosts,
   sendPostsToTelegramChannel,
-} from '@/utils';
+} from '../utils';
 import {
   CHANNEL_TRACKING_START_PROMPT,
   CHANNEL_ALREADY_TRACKING,
   BOT_ROLE_DESCRIPTION,
-} from '@/utils/ai-prompt.util';
-import { TelegramUrls } from '@/utils/enums.util';
-import { db, fb } from '@/providers/firebase.provider';
-import { TelegramChannel, TelegramChannelPost, AIResPost } from '@/models';
+} from '../utils/ai-prompt.util';
+import { TelegramUrls } from '../utils/enums.util';
+import { db, fb } from '../providers/firebase.provider';
+import { TelegramChannel, TelegramChannelPost } from '../models';
 
 bot.on('message', async (ctx) => {
   const chatId = ctx.chatId;

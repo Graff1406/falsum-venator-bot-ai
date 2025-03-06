@@ -1,7 +1,7 @@
-import { CHANNEL_POST_ANALYSIS_PROMPT } from '@/utils/ai-prompt.util';
+import { CHANNEL_POST_ANALYSIS_PROMPT } from '../utils/ai-prompt.util';
 
-import { generateTextByReducePrompt } from '@/utils/generate-text-by-reduce-prompt.util';
-import { AIResPost, TelegramChannelPost } from '@/models';
+import { generateTextByReducePrompt } from '../utils/generate-text-by-reduce-prompt.util';
+import { AIResPost, TelegramChannelPost } from '../models';
 export async function analyzeByAITelegramChannelPosts(
   posts: TelegramChannelPost[],
   lang?: string

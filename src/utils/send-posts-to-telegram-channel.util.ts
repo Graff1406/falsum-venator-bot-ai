@@ -1,7 +1,7 @@
-import bot from '@/providers/bot.provider';
-import { AIResPost, TelegramChannelPost } from '@/models';
-import { TelegramUrls } from '@/utils/enums.util';
-import { removeStars } from '@/utils/fix-markdown.util';
+import bot from '../providers/bot.provider';
+import { AIResPost, TelegramChannelPost } from '../models';
+import { TelegramUrls } from './enums.util';
+import { removeStars } from './fix-markdown.util';
 
 function getTelegramChannelId(): string | null {
   const id =
