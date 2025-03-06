@@ -4,10 +4,13 @@ import {
   parseTelegramChannelPosts,
   analyzeByAITelegramChannelPosts,
   sendPostsToTelegramChannel,
-} from '@/utils';
-import { TelegramUrls, DBCollections } from '@/utils/enums.util';
-import { getCollectionDocuments, updateTelegramChannelField } from '@/services';
-import { TelegramChannel, TelegramChannelPost } from '@/models';
+} from '../utils';
+import { TelegramUrls, DBCollections } from '../utils/enums.util';
+import {
+  getCollectionDocuments,
+  updateTelegramChannelField,
+} from '../services';
+import { TelegramChannel, TelegramChannelPost } from '../models';
 
 const bot = new Bot(process.env.TELEGRAM_BOT_TOKEN || '');
 

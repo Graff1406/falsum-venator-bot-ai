@@ -1,7 +1,7 @@
 import bot from '../providers/bot.provider';
 import { generateText } from '../services';
-import { Commands, reducePrompt } from '@/utils';
-import { WELCOME_MESSAGE_PROMPT } from '@/utils/ai-prompt.util';
+import { Commands, reducePrompt } from '../utils';
+import { WELCOME_MESSAGE_PROMPT } from '../utils/ai-prompt.util';
 
 // bot.api.setMyCommands([{ command: 'start', description: 'Start the bot' }]);
 
