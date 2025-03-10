@@ -7,5 +7,5 @@ export const config = {
   PORT: process.env.PORT || 8000,
   NODE_ENV: process.env.NODE_ENV || 'development',
   PUBLIC_DIR: path.join(__dirname, '..', '..', 'public'),
-  HOST_NAME: process.env.HOST_NAME || 'http://localhost',
+  HOST_NAME: process.env.HOST_NAME || '',
 };
