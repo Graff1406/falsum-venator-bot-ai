@@ -8,6 +8,6 @@ export const pingServer = async (pingUrl: string): Promise<void> => {
   } catch (error) {
     console.error(`Ping failed. Error: ${(error as Error).message}`);
   } finally {
-    setTimeout(() => pingServer(pingUrl), 300000);
+    setTimeout(() => pingServer(pingUrl), 180000);
   }
 };
