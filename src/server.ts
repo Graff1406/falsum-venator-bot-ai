@@ -6,7 +6,7 @@ const startServer = () => {
   const app = createApp();
 
   app.listen(config.PORT, () => {
-    console.log(`Server is running on http://localhost:${config.PORT}`);
+    console.log(`Server is running on ${config.HOST_NAME}:${config.PORT}`);
     console.log(`Environment: ${config.NODE_ENV}`);
 
     if (config.NODE_ENV === 'production' && config.HOST_NAME) {
