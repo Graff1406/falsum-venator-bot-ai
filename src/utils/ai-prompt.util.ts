@@ -6,6 +6,9 @@ Please provide the channel link of the Telegram channel you want to track. If yo
 
 export const CHANNEL_ALREADY_TRACKING = 'You are already tracking this channel';
 
+export const ALL_SUBSCRIBES_DELETED =
+  'All subscribes has deleting. you need to inform that all subscriptions have been deleted and you will no longer receive analysis results';
+
 export const WELCOME_MESSAGE_PROMPT = `
 Welcome to Falsum Venator Bot AI!
 

@@ -1,19 +1,42 @@
+import { InlineKeyboard } from 'grammy';
 import bot from '../providers/bot.provider';
-import { generateText } from '../services';
-import { Commands, reducePrompt } from '../utils';
-import { WELCOME_MESSAGE_PROMPT } from '../utils/ai-prompt.util';
+import {
+  removeFollowerFromAllChannels,
+  getUsernamesByFollowerId,
+} from '../services';
+import { Commands, TelegramUrls, generateTextByReducePrompt } from '../utils';
+import { ALL_SUBSCRIBES_DELETED } from '../utils/ai-prompt.util';
 
-// bot.api.setMyCommands([{ command: 'start', description: 'Start the bot' }]);
+// bot.api.setMyCommands([
+//   { command: 'subscribes', description: 'Subscribes' },
+//   { command: 'remove_all_subscribes', description: 'Remove all subscribes' },
+// ]);
 
-bot.command(Commands.start, async (ctx) => {
-  const lang = ctx.from?.language_code;
-  const prompt = reducePrompt({
+bot.command(Commands.SUBSCRIBES, async (ctx) => {
+  const chatId = ctx.chatId;
+  const users = await getUsernamesByFollowerId(chatId);
+
+  const inlineKeyboard = new InlineKeyboard().text(
+    'Unsubscribe',
+    'unsubscribe'
+  );
+
+  for (const username of users) {
+    await ctx.reply(`${TelegramUrls.baseURL + username}`, {
+      reply_markup: inlineKeyboard,
+    });
+  }
+});
+
+bot.command(Commands.REMOVE_ALL_SUBSCRIBES, async (ctx) => {
+  const chatId = ctx.chatId;
+  const lang = ctx.from?.language_code || 'en';
+
+  await removeFollowerFromAllChannels(chatId);
+  const data = await generateTextByReducePrompt<string>({
     lang,
-    message: WELCOME_MESSAGE_PROMPT,
-    payload: 'Response must be included only the translated message.',
+    message: ALL_SUBSCRIBES_DELETED,
   });
-  const { data } = await generateText<string>({
-    prompt,
-  });
+
   ctx.reply(data);
 });

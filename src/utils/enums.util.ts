@@ -4,7 +4,8 @@ export enum GeminiModels {
 }
 
 export enum Commands {
-  start = 'start',
+  SUBSCRIBES = 'subscribes',
+  REMOVE_ALL_SUBSCRIBES = 'remove_all_subscribes',
 }
 
 export enum TelegramUrls {

@@ -118,3 +118,50 @@ export const updateDocument = async <
     throw error;
   }
 };
+
+export const getUsernamesByFollowerId = async (
+  idToFind: number
+): Promise<string[]> => {
+  const collectionRef = db.collection(DBCollections.TELEGRAM_CHANNELS);
+
+  const snapshot = await collectionRef.get();
+  const usernames: string[] = [];
+
+  snapshot.forEach((doc) => {
+    const data = doc.data();
+
+    if (data.followers && Array.isArray(data.followers)) {
+      const hasFollower = data.followers.some(
+        (follower: { chat_id: number }) => follower.chat_id === idToFind
+      );
+
+      if (hasFollower && data.username) {
+        usernames.push(data.username);
+      }
+    }
+  });
+
+  return usernames;
+};
+
+export const removeFollowerFromAllChannels = async (
+  idToRemove: number
+): Promise<void> => {
+  const collectionRef = db.collection(DBCollections.TELEGRAM_CHANNELS);
+  const snapshot = await collectionRef.get();
+  const batch = db.batch();
+
+  snapshot.forEach((doc) => {
+    const data = doc.data();
+    if (data.followers && Array.isArray(data.followers)) {
+      const updatedFollowers = data.followers.filter(
+        (follower: { chat_id: number }) => follower.chat_id !== idToRemove
+      );
+
+      batch.update(doc.ref, { followers: updatedFollowers });
+    }
+  });
+
+  await batch.commit();
+  console.log(`Follower with chat_id ${idToRemove} removed from all channels`);
+};
