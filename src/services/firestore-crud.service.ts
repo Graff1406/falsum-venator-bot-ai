@@ -165,3 +165,34 @@ export const removeFollowerFromAllChannels = async (
   await batch.commit();
   console.log(`Follower with chat_id ${idToRemove} removed from all channels`);
 };
+
+export const removeFollowerByUsername = async (
+  username: string,
+  userId: number
+): Promise<void> => {
+  const collectionRef = db.collection(DBCollections.TELEGRAM_CHANNELS);
+
+  // Ищем документ по username
+  const snapshot = await collectionRef.where('username', '==', username).get();
+
+  if (snapshot.empty) {
+    console.log(`Document with username "${username}" was not found.`);
+    return;
+  }
+
+  const doc = snapshot.docs[0]; // Берём первый найденный документ
+  const data = doc.data();
+
+  if (!data.followers || !Array.isArray(data.followers)) {
+    console.log(`There is no followers array in document ${doc.id}.`);
+    return;
+  }
+
+  const updatedFollowers = data.followers.filter(
+    (follower: { chat_id: number }) => follower.chat_id !== userId
+  );
+
+  await doc.ref.update({ followers: updatedFollowers });
+
+  console.log(`User with chat_id ${userId} removed из followers у ${username}`);
+};

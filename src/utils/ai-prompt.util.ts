@@ -4,10 +4,18 @@ You are a Telegram bot designed to assist users in tracking posts from Telegram 
 Please provide the channel link of the Telegram channel you want to track. If you're unsure of how to find the link, you can always ask, and I will help you with the process.
 `;
 
+export const UNSUBSCRIPTION_CONFIRMATION_MESSAGE =
+  'Unsubscribe successfully completed. You will no longer receive data analysis from the unsubscribed source.';
+
+export const ERROR_INTERNAL_REQUEST =
+  'An internal error occurred. Please make your request again.';
+
 export const CHANNEL_ALREADY_TRACKING = 'You are already tracking this channel';
 
+export const NO_SUBSCRIPTIONS_FOR_ANALYSIS = `You don't have any subscriptions for analysis.`;
+
 export const ALL_SUBSCRIBES_DELETED =
-  'All subscribes has deleting. you need to inform that all subscriptions have been deleted and you will no longer receive analysis results';
+  'All subscriptions have been deleted and you will no longer receive analysis results';
 
 export const WELCOME_MESSAGE_PROMPT = `
 Welcome to Falsum Venator Bot AI!

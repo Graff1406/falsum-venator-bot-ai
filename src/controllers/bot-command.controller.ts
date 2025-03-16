@@ -5,7 +5,10 @@ import {
   getUsernamesByFollowerId,
 } from '../services';
 import { Commands, TelegramUrls, generateTextByReducePrompt } from '../utils';
-import { ALL_SUBSCRIBES_DELETED } from '../utils/ai-prompt.util';
+import {
+  ALL_SUBSCRIBES_DELETED,
+  NO_SUBSCRIPTIONS_FOR_ANALYSIS,
+} from '../utils/ai-prompt.util';
 
 // bot.api.setMyCommands([
 //   { command: 'subscribes', description: 'Subscribes' },
@@ -14,14 +17,25 @@ import { ALL_SUBSCRIBES_DELETED } from '../utils/ai-prompt.util';
 
 bot.command(Commands.SUBSCRIBES, async (ctx) => {
   const chatId = ctx.chatId;
+  const lang = ctx.from?.language_code || 'en';
+
   const users = await getUsernamesByFollowerId(chatId);
 
-  const inlineKeyboard = new InlineKeyboard().text(
-    'Unsubscribe',
-    'unsubscribe'
-  );
+  if (users?.length === 0) {
+    const data = await generateTextByReducePrompt<string>({
+      lang,
+      message: NO_SUBSCRIPTIONS_FOR_ANALYSIS,
+    });
+
+    ctx.reply(data);
+    return;
+  }
 
   for (const username of users) {
+    const inlineKeyboard = new InlineKeyboard().text(
+      'Unsubscribe',
+      `unsubscribe:${username}`
+    );
     await ctx.reply(`${TelegramUrls.baseURL + username}`, {
       reply_markup: inlineKeyboard,
     });
