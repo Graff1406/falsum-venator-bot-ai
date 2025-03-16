@@ -44,7 +44,7 @@ export const parseTelegramChannelPosts = async ({
 
     let filteredPosts = posts
       .slice(-countPosts)
-      .filter((post) => post.text.length > 200);
+      .filter((post) => post.text.length > 300);
 
     // Filter by date if `fromDatetime` is provided
     if (fromDatetime) {
