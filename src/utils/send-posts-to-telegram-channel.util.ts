@@ -32,7 +32,7 @@ export async function sendPostsToTelegramChannel(
   for (const post of reducePosts) {
     let message;
     const postURL = `${TelegramUrls.baseURL + telegramChannelUsername}/${post.post_id}`;
-    const author = post?.author?.replace(/[^a-zA-Z0-9]/g, ' ') || '';
+    const author = post?.author?.replace(/[^\p{L}\p{N} ]/gu, '').trim();
     const prompt = `*${author}*: [${post.title}](${postURL})\n\n${post.text}\n\n`;
 
     try {
