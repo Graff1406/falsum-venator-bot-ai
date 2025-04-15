@@ -4,16 +4,17 @@ import {
   removeFollowerFromAllChannels,
   getUsernamesByFollowerId,
 } from '../services';
-import { Commands, TelegramUrls, generateTextByReducePrompt } from '../utils';
+import { Commands, TelegramUrls, generateTextByReducePrompt, analyzeYoutubeContent } from '../utils';
 import {
   ALL_SUBSCRIBES_DELETED,
   NO_SUBSCRIPTIONS_FOR_ANALYSIS,
 } from '../utils/ai-prompt.util';
 
-// bot.api.setMyCommands([
-//   { command: 'subscribes', description: 'Subscribes' },
-//   { command: 'remove_all_subscribes', description: 'Remove all subscribes' },
-// ]);
+bot.api.setMyCommands([
+  { command: 'subscribes', description: 'Subscribes' },
+  { command: 'remove_all_subscribes', description: 'Remove all subscribes' },
+  // { command: 'test', description: 'Test' },
+]);
 
 bot.command(Commands.SUBSCRIBES, async (ctx) => {
   const chatId = ctx.chatId;

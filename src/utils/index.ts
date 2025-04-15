@@ -9,3 +9,4 @@ export * from './schedule-telegram-post-fetch.util';
 export * from './generate-text-by-reduce-prompt.util';
 export * from './ai-analyze-telegram-channel-posts.util';
 export * from './send-posts-to-telegram-channel.util';
+export * from './analyze-youtube-content.util';

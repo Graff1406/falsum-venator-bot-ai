@@ -58,9 +58,11 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "firebase-admin": "^13.1.0",
+    "get-youtube-id": "^1.0.1",
     "grammy": "^1.35.0",
     "helmet": "^8.0.0",
     "jsdom": "^26.0.0",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "youtube-transcript": "^1.2.1"
   }
 }
